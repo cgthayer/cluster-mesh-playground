@@ -15,7 +15,9 @@ Make targets:
 
 Pre-reqs:
 * There's a `make install-mac`
-* [Kubectl install](https://kubernetes.io/docs/reference/kubectl/)
+* [Kubectl](https://kubernetes.io/docs/reference/kubectl/)
+  * [Install Instructions](https://kubernetes.io/docs/tasks/tools/#kubectl)
+  * [Mac Install](https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/)
 * [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
 
 # Kind

@@ -1,7 +1,11 @@
+# Try "make help"
 
-main: list help
+main:
 	@echo
-	@echo "If nothing is running try: make create. Here are the targets"
+	@-$(MAKE) help
+	@echo
+	@-$(MAKE) list
+	@echo "If nothing is running try: make create"
 
 help:
 	@echo "Make targets:"
@@ -15,39 +19,52 @@ help:
 	@echo "* clean:          tear it all down"
 	@echo "* help:           this list"
 
+SHELL := /bin/bash
+
 install:
 	# todo: check for max vs windows
 	$(MAKE) install-mac
 
-install-mac:
+install-mac: install-kind-mac install-istio-mac
+
+# From https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/
+install-kind-mac:
 	@echo From https://kind.sigs.k8s.io/docs/user/quick-start/
-	brew install kind
-	@echo From https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/
-	curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"
-	# M1 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"
-	$(MAKE) install-istio
+	@kind --version || brew install kind
+	@if ! kubectl help > /dev/null; then \
+		stable=$$(curl -L -s https://dl.k8s.io/release/stable.txt); \
+		echo Downloading kubectl version $${stable}; \
+		curl -LO "https://dl.k8s.io/release/$${stable}/bin/darwin/amd64/kubectl"; \
+	fi
+
+# M1 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"
 
 # TODO: Untested
-install-windows: 
+install-windows: install-kind-windows
+install-kind-windows:
 	choco install kind
-
-install-istio:
-	# curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.16.1 sh - > istio-install.out
-	-ln -s istio-1.16.1 istio
-	./istio/bin/istioctl version
-	@echo 'Run: export PATH=$$PWD/istio/bin:$$PATH'
-	kubectl label namespace default istio-injection=enabled
-	istioctl analyze
-	kubectl -n istio-system get pods,services
 
 ISTIOCTL=./istio/bin/istioctl
 
-create:
+install-istio-mac:
+	@if ! $(ISTIOCTL) version 2> /dev/null; then \
+		curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.16.1 sh - > istio-install.out; \
+		ln -s istio-1.16.1 istio; \
+	fi
+	@echo 'Run: export PATH=$$PWD/istio/bin:$$PATH'
+
+create: create-kind test-app create-istio test-istio-app
+
+create-kind:
 	kind create cluster --name cluster-wb --config cluster-wb.yml
 	kind get clusters
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=90s
+
+create-istio:
 	$(ISTIOCTL) install --set profile=demo -y
+	kubectl label namespace default istio-injection=enabled
+	kubectl -n istio-system get pods,services
 
 # untested
 clusters:
@@ -67,9 +84,10 @@ list:
 test-app:
 	kubectl apply -f http-echo.yml
 	kubectl get pod foo-app
-	curl -is localhost/foo/hostname
+	@for attempt in $$(seq 1 20); do if [ "$$(curl -s localhost/foo/hostname)" != "foo-app" ]; then echo "waiting $${attempt}"; sleep 1; fi; done
+	curl -is localhost/foo/hostname; echo
 	kubectl get pod bar-app
-	curl -is localhost/bar/hostname
+	curl -is localhost/bar/hostname; echo
 
 test-istio-app:
 	if [ ! -d istio ]; then $(MAKE) install=istio; fi
