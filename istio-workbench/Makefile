@@ -11,7 +11,7 @@ help:
 	@echo "Make targets:"
 	@echo "* install:          install kind, kubectl, istio (mac)"
 	@echo "  * install-kind:   install just kind and k8s"
-	@echo "  * install-istio:  install istio including itsoctl"
+	@echo "  * install-istio:  install istio including istioctl"
 	@echo "* create:           create a cluster and ingress"
 	@echo "* list:             see how it's doing"
 	@echo "* test-app:         test the ingress with a couple of apps: foo and bar"

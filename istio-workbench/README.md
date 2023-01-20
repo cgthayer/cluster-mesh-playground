@@ -1,11 +1,11 @@
 # Example cluster setup
 
-This is a playground for trying out stuff. Try running `make`.
+This is a playground for trying out stuff. Try running `make`
 
 Make targets:
 * install: install kind, kubectl, istio (mac)
   * install-kind: install just kind and k8s
-  * install-istio: install istio including itsoctl
+  * install-istio: install istio including istioctl
 * create: create a cluster and ingress
 * list: see how it's doing
 * test-app: test the ingress with a couple of apps: foo and bar
@@ -98,5 +98,19 @@ launch the grafana and kiali dashboards. There's a script to run
 `./istio-gen-dummy-data.sh` (generator)[istio-gen-dummy-data.sh] that
 will help provide some metrics.
 
-![images/kiali-eg.png]
+![Kiali Dashboard](images/kiali-eg.png)
+
+## TODO: Clusters and Federation
+
+We have a template for a cluster, and running `make clusters` will
+generate 3 of them (well actually 2 more than you already have). At which point you can run:
+
+```
+$ kind get clusters
+cluster-wb
+cluster-wb2
+cluster-wb3
+```
+
+Now the fun begins...
 
