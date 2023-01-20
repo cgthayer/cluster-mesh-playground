@@ -5,24 +5,33 @@ main:
 	@-$(MAKE) help
 	@echo
 	@-$(MAKE) list
-	@echo "If nothing is running try: make create"
+	@echo "If nothing is running try: make install create"
 
 help:
 	@echo "Make targets:"
-	@echo "* install:        install kind, kubectl, istio (mac)"
-	@echo "* create:         create a cluster and ingress"
-	@echo "* list:           see how it's doing"
-	@echo "* test-app:       test the ingress with a couple of apps: foo and bar"
-	@echo "* install-istio:  install istio including itsoctl"
-	@echo "* test-istio-app: install istio bookinfo demo app"
-	@echo "* istio-ui:       launch the kiali dashboard"
-	@echo "* clean:          tear it all down"
-	@echo "* help:           this list"
+	@echo "* install:          install kind, kubectl, istio (mac)"
+	@echo "  * install-kind:   install just kind and k8s"
+	@echo "  * install-istio:  install istio including itsoctl"
+	@echo "* create:           create a cluster and ingress"
+	@echo "* list:             see how it's doing"
+	@echo "* test-app:         test the ingress with a couple of apps: foo and bar"
+	@echo "* test-istio-app:   install istio bookinfo demo app"
+	@echo "* istio-ui:         launch grafana, and the kiali dashboard"
+	@echo "* clean:            tear it all down"
+	@echo "* help:             this list"
+
+# house keeping
+.PHONY: main help install install-mac install-kind-mac isntall-windows \
+	install-kind-windows install-istio-mac create create-kind \
+	create-istio clusters list test-app test-istio-app istio-ui \
+	clean
 
 SHELL := /bin/bash
+ISTIOCTL=./istio/bin/istioctl
 
+# start here
 install:
-	# todo: check for max vs windows
+	# todo: check os
 	$(MAKE) install-mac
 
 install-mac: install-kind-mac install-istio-mac
@@ -43,8 +52,6 @@ install-kind-mac:
 install-windows: install-kind-windows
 install-kind-windows:
 	choco install kind
-
-ISTIOCTL=./istio/bin/istioctl
 
 install-istio-mac:
 	@if ! $(ISTIOCTL) version 2> /dev/null; then \
@@ -90,7 +97,7 @@ test-app:
 	curl -is localhost/bar/hostname; echo
 
 test-istio-app:
-	if [ ! -d istio ]; then $(MAKE) install=istio; fi
+	if [ ! -d istio ]; then $(MAKE) install-istio; fi
 	kubectl apply -f istio/samples/bookinfo/platform/kube/bookinfo.yaml
 	kubectl get services
 	# open to the world
@@ -111,4 +118,5 @@ istio-ui:
 
 clean:
 	kind delete clusters cluster-wb
+
 # end
