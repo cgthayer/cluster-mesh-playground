@@ -114,3 +114,6 @@ cluster-wb3
 
 Now the fun begins...
 
+TODO: explain `kubectl config current-context` and the
+`~/.kube/config` a little so people can switch around.
+
