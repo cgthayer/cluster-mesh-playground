@@ -106,6 +106,10 @@ will help provide some metrics.
 
 ![Kiali Dashboard](images/kiali-eg.png)
 
+Pro-tip: in the upper right (grafana and kiali) you may wish to change
+the timeframe to "Last 1h" or "Last 3h" otherwise you'll need to keep
+running the dummy data generator to see anything
+
 ## TODO: Clusters and Federation
 
 We have a template for a cluster, and running `make clusters` will
