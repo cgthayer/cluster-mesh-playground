@@ -80,6 +80,7 @@ clusters:
 	PORT_HTTP=82 PORT_HTTPS=445 envsubst < cluster-wb.yml.tmpl > cluster-wb3.yml
 	kind create cluster --name cluster-wb3 --config cluster-wb3.yml
 	kind get clusters
+	kubectl config use-context kind-cluster-wb  # switch back to main
 
 list:
 	@echo Kind clusters::

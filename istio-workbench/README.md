@@ -22,7 +22,7 @@ Pre-requisities:
   * [Mac Install](https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/)
 * [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/)
 
-# Kind
+# Kind and Kubernetes Commands
 
 Useful commands
 * `kind create cluster` # name "kind"
@@ -30,7 +30,7 @@ Useful commands
 * `kind get clusters`
 * `kind delete cluster`
 
-# k8s
+# k8s Commands
 
 Useful commands
 * `kubectl cluster-info`
@@ -38,7 +38,13 @@ Useful commands
 * `kubectl config set-cluster NAME`
 * `kubectl get pods --show-labels`
 
-# Istio
+Multi-cluster
+* `kubernetes current-context`
+* `kubernetes get-contexts`
+* `kubernetes get-clusters`
+* `kubernetes use-context NAME`
+
+# Istio Commands
 
 Useful commands
 * `istioctl dashboard kiali &`  # launch the UI
