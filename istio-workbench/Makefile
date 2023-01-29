@@ -60,7 +60,11 @@ install-istio-mac:
 	fi
 	@echo 'Run: export PATH=$$PWD/istio/bin:$$PATH'
 
-create: create-kind test-app create-istio test-istio-app
+create:
+	if ! kind get clusters | grep cluster-wb; then $(MAKE) create-kind; else echo Kind already created; fi
+	$(MAKE) test-app
+	$(MAKE) create-istio
+	$(MAKE) test-istio-app
 
 create-kind:
 	kind create cluster --name cluster-wb --config cluster-wb.yml
@@ -92,7 +96,10 @@ list:
 test-app:
 	kubectl apply -f http-echo.yml
 	kubectl get pod foo-app
-	@for attempt in $$(seq 1 20); do if [ "$$(curl -s localhost/foo/hostname)" != "foo-app" ]; then echo "waiting $${attempt}"; sleep 1; fi; done
+	@ max=30; \
+		for attempt in $$(seq 1 ${max}); do if [ "$$(curl -s localhost/foo/hostname)" != "foo-app" ]; then echo "waiting $${attempt}/$${max}"; sleep 1; fi; done; \
+		echo "$${attempt} ge $${max}"; \
+		if [ "$${attempt}" -ge "$${max}" ]; then echo FAILED; exit -1; fi
 	curl -is localhost/foo/hostname; echo
 	kubectl get pod bar-app
 	curl -is localhost/bar/hostname; echo
@@ -104,6 +111,7 @@ test-istio-app:
 	# open to the world
 	kubectl apply -f istio/samples/bookinfo/networking/bookinfo-gateway.yaml
 	kubectl get gateway
+	kubectl wait --for=condition=ready pod -l app=ratings
 	./istio-gen-dummy-data.sh
 
 istio-ui:
@@ -118,6 +126,6 @@ istio-ui:
 	@echo "    There's a folder 'istio' with dashboards"
 
 clean:
-	kind delete clusters cluster-wb
+	kind delete clusters cluster-wb cluster-wb2 cluster-wb3
 
 # end
