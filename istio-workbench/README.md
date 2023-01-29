@@ -3,7 +3,7 @@
 This is a playground for trying out stuff. Try running `make`
 
 Make targets:
-* install: install kind, kubectl, istio (mac)
+* install: install kind, kubectl, istio (mac default)
   * install-kind: install just kind and k8s
   * install-istio: install istio including istioctl
 * create: create a cluster and ingress

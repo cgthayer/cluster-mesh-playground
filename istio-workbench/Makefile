@@ -9,7 +9,7 @@ main:
 
 help:
 	@echo "Make targets:"
-	@echo "* install:          install kind, kubectl, istio (mac)"
+	@echo "* install:          install kind, kubectl, istio"
 	@echo "  * install-kind:   install just kind and k8s"
 	@echo "  * install-istio:  install istio including istioctl"
 	@echo "* create:           create a cluster and ingress"
@@ -28,13 +28,20 @@ help:
 
 SHELL := /bin/bash
 ISTIOCTL=./istio/bin/istioctl
+OS := $(shell uname)
 
-# start here
+# main: start here
 install:
-	# todo: check os
-	$(MAKE) install-mac
+	@if [ $(OS) = "Darwin" ]; then \
+		$(MAKE) install-mac; \
+	elif [ $(OS) = "Linux" ]; then \
+		$(MAKE) install-linux; \
+	else \
+		echo "OS=$(OS) not yet supported, sorry.."; \
+	fi
 
 install-mac: install-kind-mac install-istio-mac
+install-linux: install-kind-linux install-istio-linux
 
 # From https://kubernetes.io/docs/tasks/tools/install-kubectl-macos/
 install-kind-mac:
@@ -44,6 +51,22 @@ install-kind-mac:
 		stable=$$(curl -L -s https://dl.k8s.io/release/stable.txt); \
 		echo Downloading kubectl version $${stable}; \
 		curl -LO "https://dl.k8s.io/release/$${stable}/bin/darwin/amd64/kubectl"; \
+		which kubectl; \
+	fi
+
+install-kind-linux:
+	@echo From https://kind.sigs.k8s.io/docs/user/quick-start/
+	@if ! kind --version; then \
+		curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.17.0/kind-linux-amd64; \
+		chmod +x ./kind; \
+		sudo mv ./kind /usr/local/bin/kind; \
+	fi
+	@if ! kubectl help > /dev/null; then \
+		stable=$$(curl -L -s https://dl.k8s.io/release/stable.txt); \
+		echo Downloading kubectl version $${stable}; \
+		curl -LO "https://dl.k8s.io/release/$${stable}/bin/linux/amd64/kubectl"; \
+		chmod a+rx ./kubectl; \
+		sudo mv kubectl /usr/local/bin; \
 	fi
 
 # M1 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/arm64/kubectl"
@@ -53,12 +76,15 @@ install-windows: install-kind-windows
 install-kind-windows:
 	choco install kind
 
-install-istio-mac:
+install-istio-mac: install-istio-unix-like
+install-istio-linux: install-istio-unix-like
+install-istio-unix-like:
 	@if ! $(ISTIOCTL) version 2> /dev/null; then \
 		curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.16.1 sh - > istio-install.out; \
 		ln -s istio-1.16.1 istio; \
 	fi
 	@echo 'Run: export PATH=$$PWD/istio/bin:$$PATH'
+
 
 create:
 	if ! kind get clusters | grep cluster-wb; then $(MAKE) create-kind; else echo Kind already created; fi
@@ -98,7 +124,6 @@ test-app:
 	kubectl get pod foo-app
 	@ max=30; \
 		for attempt in $$(seq 1 ${max}); do if [ "$$(curl -s localhost/foo/hostname)" != "foo-app" ]; then echo "waiting $${attempt}/$${max}"; sleep 1; fi; done; \
-		echo "$${attempt} ge $${max}"; \
 		if [ "$${attempt}" -ge "$${max}" ]; then echo FAILED; exit -1; fi
 	curl -is localhost/foo/hostname; echo
 	kubectl get pod bar-app
